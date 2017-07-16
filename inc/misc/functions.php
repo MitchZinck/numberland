@@ -35,14 +35,14 @@
 
 		$query = $db->prepare("SELECT `id` FROM `orders` WHERE `order_id` = ?");
 		$query->execute(array($oid));
+		$ids = array();
 		$ids = $query->fetchAll();
-		$inQuery = str_repeat('?,', count($ids) - 1) . '?';
-		$arr = array($number);
-		$arr[] = $ids;
-
-
-		$query = $db->prepare("UPDATE `orders` SET `number_id` = ? WHERE `id` IN($inQuery");
-		$query->execute($arr);
+		$inQuery = "";
+		for($i = 0; $i < sizeof($ids); $i++) {
+			$inQuery .= $ids[$i]['id'] . ",";
+		}
+		$inQuery = rtrim($inQuery,',');
+		$db->exec("UPDATE `orders` SET `number_id` = " . $number . " WHERE `id` in (" . $inQuery. ")");
 
 		$query = $db->prepare("INSERT INTO `numbers` (number, email) VALUES (:number, :email)");
 		$query->bindParam(':number', $number);
