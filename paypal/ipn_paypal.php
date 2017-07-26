@@ -13,7 +13,7 @@ class PayPal_IPN{
 		$amount=$response['AMT'];
         $amount = str_replace("%2e",".", $amount);
 		$currency=$response['CURRENCYCODE'];
-		$payer_email=$response['EMAIL'];
+		$payer_email= urldecode($response['EMAIL']);
 		$first_name=$response['FIRSTNAME'];
 		$last_name=$response['LASTNAME'];
 		$country=$response['COUNTRYCODE'];

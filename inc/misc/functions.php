@@ -20,6 +20,14 @@
 		$query->$execute(array($email, $emailCode));
 	}
 
+	function clothingExists($id, $db) {
+		$query = $db->prepare("SELECT id FROM `clothing` WHERE id = ?");
+		$query->execute(array($id));
+		if($query->fetchColumn() <= 0) {
+			return false;
+		}
+		return true;
+	}
 
 	function getOrdersLastId($db) {
 		$query = $db->prepare("SELECT MAX(order_id) FROM `orders`");
@@ -29,6 +37,7 @@
 	}
 
 	function newNumber($db, $email, $oid) {
+		$email = urldecode($email);
 		$query = $db->prepare("SELECT MAX(number) FROM `numbers`");
 		$query->execute();
 		$number = $query->fetchColumn() + 1;
@@ -46,7 +55,7 @@
 
 		$query = $db->prepare("INSERT INTO `numbers` (number, email) VALUES (:number, :email)");
 		$query->bindParam(':number', $number);
-		$query->bindParam(':email', $email);
+		$query->bindParam(':email', $email, PDO::PARAM_STR);
 		$query->execute();
 	}
 

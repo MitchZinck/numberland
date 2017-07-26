@@ -1,6 +1,6 @@
 <?php
 //error_reporting(0);
-if (empty($_POST['payment_method']) || empty($_POST['email']) || empty($_POST['qty'])) {
+if (empty($_POST['payment_method']) || empty($_POST['email']) || $_POST['itemCount'] <= 0) {
 	die('Please fill out all required fields.');
 }
 
@@ -11,22 +11,25 @@ include_once("paypal/paypal.class.php");
 
 $method = ($_POST['payment_method'] == 'btc' ? 'btc' : 'pp');
 $email  = $_POST['email'];
-$clothes = $_POST['clothes'];
 
 $oid = getOrdersLastId($db) + 1;
 $totalPrice = 0;
 $ppEcho = "";
-$count = 1;
 $price = 0;
 $items = array();
+$cont = false;
 
-foreach ($clothes as $key => $value) {
-	$clothing_id = $value;
-	$name = getClothingNameById($clothing_id, $db);
-	$desc = getClothingDescById($clothing_id, $db);
-	$qty = intval($_POST[$value]); 
-	$price = getPrice($clothing_id, $db);
-	$totalPrice += $price;
+for ($i = 1; $i <= $_POST['itemCount']; $i++) {
+    $arr[] = explode(":", $_POST['item_options_' . $i]);
+    $clothing_id = $arr[0][2];
+    if(!clothingExists($clothing_id, $db)) {
+        continue;
+    }
+    $name = getClothingNameById($clothing_id, $db);
+    $desc = getClothingDescById($clothing_id, $db);
+    $qty = intval($_POST['item_quantity_' . $i]); 
+    $price = getPrice($clothing_id, $db);
+    $totalPrice += $price;
 
 	$clothingArray = array("qty" => $qty,
 						   "price" => $price,
@@ -47,10 +50,14 @@ foreach ($clothes as $key => $value) {
 	$stmt->bindParam(':size', $size, PDO::PARAM_STR);
 	$stmt->execute();
 
-	$count++;
+    $cont = true;
 }
 
-
+if($cont === false) {
+    header('Location: inc/misc/error.php');
+    $_SESSION['error'] = "Something went wrong with your purchase.";
+    die("Error");
+}
 // process payment method
 if ($method == 'pp'){
     $paypalmode = ($PayPalMode=='sandbox') ? '.sandbox' : '';
